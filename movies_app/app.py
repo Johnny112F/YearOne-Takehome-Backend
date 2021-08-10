@@ -4,10 +4,12 @@ from models import db, connect_db, Movie
 from flask_cors import CORS, cross_origin
 
 app = Flask(__name__)
-
-
-cors = CORS(app, resources={r"/movies/<movie_id>": {"origins": "http://localhost:port"}})
-
+CORS(app)
+cors = CORS(app, resources={
+    r"/": {
+        "origins": "*"
+    }
+})
 
 app.config['CORS_HEADERS'] = 'Content-Type'
 app.config["SQLALCHEMY_DATABASE_URI"] = "postgresql:///movies"
@@ -22,7 +24,7 @@ API_KEY = "025df31fafd1a25ca2c09af81ad939a7"
 
 
 @app.route("/movies/search", methods=["GET"])
-@cross_origin(origin='localhost',headers=['Content- Type','Authorization'])
+@cross_origin()
 def search_movies():
     """Search API for movies"""
 
@@ -38,7 +40,7 @@ def search_movies():
 
 
 @app.route("/movies/<movie_id>", methods=["GET"])
-@cross_origin(origin='localhost',headers=['Content- Type','Authorization'])
+@cross_origin()
 def movie_detail(movie_id):
     """get details of a specific movie"""
     
@@ -70,7 +72,7 @@ def movie_detail(movie_id):
 
 
 @app.route("/movies/<movie_id>/rate", methods=["POST"])
-@cross_origin(origin='localhost',headers=['Content- Type','Authorization'])
+@cross_origin()
 def rate_movie(movie_id):
     """Check database for movie rating and increment thumbs up vote"""
     # filter to see if the movie already exists in db
