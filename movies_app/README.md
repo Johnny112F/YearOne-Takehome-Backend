@@ -20,3 +20,5 @@ then type CREATE DATABASE movies. You may have to run app.py in ipython from the
 7.Use the command "flask run" while in teh movies_app folder from the terminal to start the server.
 
 8. You can test the backend routes in insomnia by importing the request collection from this backend or by creating your own.
+
+<img width="400" alt="Screen Shot 2021-08-22 at 3 04 12 PM" src="https://user-images.githubusercontent.com/50811190/130369464-ca9ae45f-c6db-40f7-acea-8121d99ff83c.png">
