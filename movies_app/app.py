@@ -2,29 +2,27 @@ from flask import Flask, request
 import requests
 from models import db, connect_db, Movie
 from flask_cors import CORS, cross_origin
+from dotenv import load_dotenv
+import os
+
+load_dotenv()
 
 app = Flask(__name__)
-CORS(app)
-cors = CORS(app, resources={
-    r"/": {
-        "origins": "*"
-    }
-})
 
-app.config['CORS_HEADERS'] = 'Content-Type'
+app.config['DEBUG_TB_INTERCEPT_REDIRECTS'] = False
+app.config['TESTING'] = False
+
 app.config["SQLALCHEMY_DATABASE_URI"] = "postgresql:///movies"
 app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 app.config["SQLALCHEMY_ECHO"] = False
 
 connect_db(app)
 
-API_BASE_URL = "https://api.themoviedb.org/3"
-
-API_KEY = "025df31fafd1a25ca2c09af81ad939a7"
+API_BASE_URL = os.environ.get("API_BASE_URL")
+API_KEY = os.environ.get("API_KEY")
 
 
 @app.route("/movies/search", methods=["GET"])
-@cross_origin()
 def search_movies():
     """Search API for movies"""
 
@@ -33,18 +31,19 @@ def search_movies():
 
     querystring = {"api_key": API_KEY, "query": term, "page": page}
 
-    res = requests.get(f"{API_BASE_URL}/search/movie", params=querystring)
+    url = f"{API_BASE_URL}/search/movie";
+
+    res = requests.get(url, params=querystring)
     data = res.json()
     
     return(data, 200)
 
 
 @app.route("/movies/<movie_id>", methods=["GET"])
-@cross_origin()
 def movie_detail(movie_id):
     """get details of a specific movie"""
     
-    movie = Movie.query.get(movie_id)
+    stored_details = Movie.query.get(movie_id)
     
     querystring = {"api_key": API_KEY}
     
@@ -54,25 +53,35 @@ def movie_detail(movie_id):
     title = details["title"]
     release_year = details["release_date"][:4]
     description = details["overview"]
+    poster_path = details["poster_path"]
 
     credits_resp = requests.get(f"{API_BASE_URL}/movie/{movie_id}/credits", params=querystring)
     crew = credits_resp.json()['crew']
-    director = [x for x in crew if x['job'] == "Director"][0]["name"]
+    
+    try:
+        director = [x for x in crew if x['job'] == "Director"][0]["name"]
+    except IndexError:
+        director = "no director found"
 
     movie_details = {
                      "title": title, 
                      "release_year": release_year, 
                      "description": description, 
                      "director": director,
-                     "thumbs_up": movie.thumbs_up or 0,
-                     "thumbs_down": movie.thumbs_down or 0
+                     "thumbs_up": 0,
+                     "thumbs_down": 0,
+                     "poster_path": poster_path
                     }
-    
+
+    if stored_details:
+        movie_details["thumbs_up"] = stored_details.thumbs_up
+        movie_details["thumbs_down"] = stored_details.thumbs_down
+
     return (movie_details, 200)
 
 
+
 @app.route("/movies/<movie_id>/rate", methods=["POST"])
-@cross_origin()
 def rate_movie(movie_id):
     """Check database for movie rating and increment thumbs up vote"""
     # filter to see if the movie already exists in db
@@ -88,5 +97,5 @@ def rate_movie(movie_id):
         db.session.add(movie)
 
     db.session.commit()
-    breakpoint()
-    return(title)
+
+    return ({"thumbs_up": movie.thumbs_up, "thumbs_down": movie.thumbs_down}, 201)
