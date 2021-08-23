@@ -2,6 +2,8 @@
 
 Please see the instructions below for proper setup of the Flask backend for the takehome application. If you would like to setup the frontend please go to [https://github.com/Johnny112F/YearOne-Takehome-Frontend].
 
+See the deployed app in action at [YearOneMovies](https://fretful-hands.surge.sh/)
+
 ## Backend Setup
 
 1.Navigate to the movies_app folder in the backend. Create a virtual environment using *python3 -m venv venv*.
